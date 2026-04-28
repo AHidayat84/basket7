@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduSport Battle - Basketball Edition</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --primary: #f97316; /* Basket Orange */
+            --secondary: #3b82f6;
+            --accent: #fbbf24;
+            --danger: #ef4444;
+            --p1: #3b82f6;
+            --p2: #ef4444;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-title: 'Arial Black', Gadget, sans-serif;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: var(--font-main); 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: #fff; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar { 
+            position: absolute; 
+            top: 15px; 
+            right: 15px; 
+            z-index: 1000; 
+            display: flex; 
+            gap: 10px; 
+        }
+        
+        .icon-btn { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 50%; 
+            width: 45px; 
+            height: 45px; 
+            color: white; 
+            cursor: pointer; 
+            backdrop-filter: blur(10px); 
+            transition: 0.3s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.1rem;
+        }
+
+        #main-menu {
+            position: fixed; 
+            inset: 0; 
+            z-index: 900;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .menu-card { 
+            background: rgba(255,255,255,0.03); 
+            padding: 30px; 
+            border-radius: 32px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            text-align: center; 
+            backdrop-filter: blur(20px);
+            max-width: 500px; 
+            width: 100%; 
+        }
+
+        .logo-frame {
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%; 
+            margin: 0 auto 20px;
+            border: 4px solid var(--primary); 
+            background: rgba(255, 255, 255, 0.1); 
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .game-title { 
+            font-family: var(--font-title); 
+            font-size: 2.2rem; 
+            line-height: 1.1; 
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        
+        .menu-btn { 
+            padding: 16px; 
+            border: none; 
+            border-radius: 16px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-transform: uppercase; 
+            font-size: 1rem;
+        }
+        .btn-primary { background: #fff; color: #000; }
+        .btn-duel { background: var(--p2); color: white; }
+
+        .mode-selector { 
+            display: flex; 
+            background: rgba(0,0,0,0.4); 
+            border-radius: 14px; 
+            padding: 5px; 
+            margin-bottom: 20px; 
+        }
+        .mode-opt { 
+            flex: 1; 
+            padding: 10px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 0.75rem; 
+            font-weight: 900; 
+            color: #94a3b8; 
+        }
+        .mode-opt.active { background: #fff; color: #000; }
+
+        #game-container { 
+            position: fixed; 
+            inset: 0; 
+            display: none; 
+            background: #000;
+        }
+        
+        #game-container.mode-solo { grid-template-columns: 1fr; }
+        #game-container.mode-duel { grid-template-columns: 1fr 1fr; }
+
+        .player-area { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            background: #431407; /* Polished Court Wood Color */
+            border: 1px solid rgba(255,255,255,0.05); 
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .hud { 
+            padding: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            background: rgba(0,0,0,0.7); 
+            border-bottom: 4px solid transparent;
+            font-weight: 900;
+        }
+        
+        .timer-track { height: 6px; background: rgba(255,255,255,0.1); width: 100%; }
+        .timer-fill { height: 100%; width: 100%; transition: width 0.1s linear; }
+
+        .game-content { flex: 1; display: flex; flex-direction: column; padding: 20px; justify-content: space-between; }
+        
+        .ball-area { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 6rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
+
+        .question-card { 
+            background: rgba(0,0,0,0.6); 
+            border-radius: 24px; 
+            padding: 20px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px);
+        }
+        
+        .q-text { font-size: 1.1rem; font-weight: 800; text-align: center; margin-bottom: 15px; min-height: 3.5em; line-height: 1.4; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .option-btn { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px 10px; 
+            border-radius: 12px; 
+            color: white; 
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        #victory-screen {
+            position: fixed; 
+            inset: 0; 
+            z-index: 2000; 
+            background: rgba(15, 23, 42, 0.98);
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 30px;
+        }
+
+        .correct { background: var(--primary) !important; border-color: transparent !important; }
+        .wrong { background: var(--danger) !important; border-color: transparent !important; }
+        .eliminated { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+
+        @media (max-width: 600px) {
+            #game-container.mode-duel { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+            .options-grid { grid-template-columns: 1fr; }
+            .ball-area { font-size: 4rem; }
+            .q-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <button class="icon-btn" onclick="location.reload()">🏠</button>
+        <button id="audio-toggle" class="icon-btn">🔈</button>
+    </div>
+
+    <div id="main-menu">
+        <div class="menu-card">
+            <div class="logo-frame">🏀</div>
+            <h1 class="game-title">BASKETBALL CHALLENGE</h1>
+            
+            <div class="mode-selector">
+                <div id="m-score" class="mode-opt active" onclick="setRules('score')">10 SOAL</div>
+                <div id="m-elim" class="mode-opt" onclick="setRules('elim')">3 NYAWA</div>
+            </div>
+
+            <div class="btn-group">
+                <button class="menu-btn btn-primary" onclick="initGame(1)">Solo Mode</button>
+                <button class="menu-btn btn-duel" onclick="initGame(2)">Duel 1v1</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div id="victory-screen">
+        <h2 style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;">HASIL AKHIR</h2>
+        <div id="results-list" style="width: 100%; max-width: 400px; margin-bottom: 30px;"></div>
+        <button class="menu-btn btn-primary" onclick="location.reload()">MENU UTAMA</button>
+    </div>
+
+    <script>
+        // Bank Soal Bola Basket (50 Soal)
+        const questionBank = [
+            { q: "Berapa jumlah pemain dalam satu tim bola basket di lapangan?", options: ["4 Orang", "5 Orang", "6 Orang", "7 Orang"], answer: 1 },
+            { q: "Siapa induk organisasi bola basket dunia?", options: ["FIFA", "FIBA", "FIVB", "BWF"], answer: 1 },
+            { q: "Induk organisasi bola basket di Indonesia adalah?", options: ["PSSI", "PERBASI", "PBVSI", "PERPANI"], answer: 1 },
+            { q: "Berapa poin yang didapat jika memasukkan bola dari luar garis lengkung (busur)?", options: ["1 Poin", "2 Poin", "3 Poin", "4 Poin"], answer: 2 },
+            { q: "Berapa poin yang didapat dari satu lemparan bebas (free throw)?", options: ["1 Poin", "2 Poin", "3 Poin", "0 Poin"], answer: 0 },
+            { q: "Waktu pertandingan basket internasional (FIBA) terdiri dari berapa kuarter?", options: ["2 Kuarter", "3 Kuarter", "4 Kuarter", "5 Kuarter"], answer: 2 },
+            { q: "Berapa lama durasi satu kuarter dalam pertandingan FIBA?", options: ["8 Menit", "10 Menit", "12 Menit", "15 Menit"], answer: 1 },
+            { q: "Apa istilah membawa bola sambil melangkah tanpa memantulkannya (dribble)?", options: ["Dribbling", "Traveling", "Jumping", "Foul"], answer: 1 },
+            { q: "Siapa pemain legendaris NBA yang dijuluki 'Air Jordan'?", options: ["LeBron James", "Kobe Bryant", "Michael Jordan", "Shaquille O'Neal"], answer: 2 },
+            { q: "Apa nama liga bola basket profesional yang paling terkenal di Amerika Serikat?", options: ["NBA", "MLS", "NFL", "MLB"], answer: 0 },
+            { q: "Teknik menembak bola sambil melompat dengan satu tangan dekat ring disebut?", options: ["Slam Dunk", "Lay-up", "Jump Shot", "Hook Shot"], answer: 1 },
+            { q: "Berapa batas maksimal personal foul seorang pemain dalam FIBA sebelum dikeluarkan?", options: ["4 Foul", "5 Foul", "6 Foul", "7 Foul"], answer: 1 },
+            { q: "Istilah memantulkan bola ke lantai dalam basket disebut?", options: ["Passing", "Shooting", "Dribbling", "Rebounding"], answer: 2 },
+            { q: "Berapa tinggi ring basket dari lantai?", options: ["2,75 m", "3,05 m", "3,15 m", "3,50 m"], answer: 1 },
+            { q: "Teknik menangkap bola yang gagal masuk ke ring disebut?", options: ["Steal", "Block", "Rebound", "Pivot"], answer: 2 },
+            { q: "Gerakan memutar badan dengan salah satu kaki sebagai poros disebut?", options: ["Pivot", "Dribble", "Jump Shot", "Screen"], answer: 0 },
+            { q: "Berapa lama waktu yang diberikan kepada tim untuk melakukan serangan (shot clock)?", options: ["24 Detik", "30 Detik", "35 Detik", "40 Detik"], answer: 0 },
+            { q: "Siapa pemain NBA yang mencetak poin terbanyak sepanjang sejarah (all-time)?", options: ["Michael Jordan", "Kareem Abdul-Jabbar", "LeBron James", "Kobe Bryant"], answer: 2 },
+            { q: "Apa sebutan untuk lemparan yang masuk ke ring secara langsung dengan tenaga besar ke bawah?", options: ["Lay-up", "Slam Dunk", "Free Throw", "Three Point"], answer: 1 },
+            { q: "Posisi pemain yang bertugas sebagai pengatur serangan adalah?", options: ["Center", "Power Forward", "Point Guard", "Small Forward"], answer: 2 },
+            { q: "Posisi pemain yang biasanya paling tinggi dan menjaga area bawah ring adalah?", options: ["Point Guard", "Shooting Guard", "Center", "Small Forward"], answer: 2 },
+            { q: "Berapa ukuran panjang lapangan basket standar FIBA?", options: ["26 m", "28 m", "30 m", "32 m"], answer: 1 },
+            { q: "Berapa ukuran lebar lapangan basket standar FIBA?", options: ["14 m", "15 m", "16 m", "18 m"], answer: 1 },
+            { q: "Istilah merebut bola dari lawan yang sedang dribble atau passing disebut?", options: ["Block", "Steal", "Intercept", "Foul"], answer: 1 },
+            { q: "Pelanggaran karena memegang bola kembali setelah berhenti dribble disebut?", options: ["Traveling", "Double Dribble", "Backcourt", "Personal Foul"], answer: 1 },
+            { q: "Pelanggaran karena kembali ke area pertahanan sendiri setelah melewati garis tengah?", options: ["Back Ball / Backcourt", "3 Second", "8 Second", "Charging"], answer: 0 },
+            { q: "Waktu maksimal yang diberikan untuk membawa bola melewati garis tengah adalah?", options: ["3 Detik", "5 Detik", "8 Detik", "10 Detik"], answer: 2 },
+            { q: "Pemain tidak boleh berada di area terlarang lawan lebih dari berapa detik?", options: ["3 Detik", "5 Detik", "8 Detik", "10 Detik"], answer: 0 },
+            { q: "Apa nama tim NBA yang berasal dari Los Angeles dan identik dengan warna ungu-emas?", options: ["Celtics", "Lakers", "Warriors", "Bulls"], answer: 1 },
+            { q: "Teknik operan bola setinggi dada disebut?", options: ["Chest Pass", "Bounce Pass", "Overhead Pass", "Baseball Pass"], answer: 0 },
+            { q: "Teknik operan bola dengan cara dipantulkan ke lantai disebut?", options: ["Chest Pass", "Bounce Pass", "Overhead Pass", "Hook Pass"], answer: 1 },
+            { q: "Teknik operan bola dari atas kepala disebut?", options: ["Chest Pass", "Bounce Pass", "Overhead Pass", "Underhand Pass"], answer: 2 },
+            { q: "Siapa pemain NBA yang dijuluki 'Black Mamba'?", options: ["LeBron James", "Shaquille O'Neal", "Kobe Bryant", "Stephen Curry"], answer: 2 },
+            { q: "Tim mana yang menjuarai NBA musim 2023-2024?", options: ["Denver Nuggets", "Boston Celtics", "Golden State Warriors", "Miami Heat"], answer: 1 },
+            { q: "Apa istilah untuk tembakan yang gagal mengenai ring maupun papan?", options: ["Brick", "Airball", "Swish", "Hook"], answer: 1 },
+            { q: "Berapa jarak garis tiga angka (3-point line) dari tengah ring dalam FIBA?", options: ["6,25 m", "6,75 m", "7,24 m", "7,50 m"], answer: 1 },
+            { q: "Apa nama papan yang berada di belakang ring?", options: ["Backboard", "Billboard", "Sideboard", "Ramboard"], answer: 0 },
+            { q: "Istilah jika seorang pemain mencetak angka, rebound, dan assist minimal 10 dalam satu laga?", options: ["Double-Double", "Triple-Double", "Quadruple-Double", "Score-Ten"], answer: 1 },
+            { q: "Siapa pemain yang terkenal dengan kemampuan tembakan tiga angka terbaik (Golden State Warriors)?", options: ["Kevin Durant", "Stephen Curry", "Klay Thompson", "James Harden"], answer: 1 },
+            { q: "Menghalangi lawan yang akan menembak dengan tangan tanpa menyentuh tubuh lawan disebut?", options: ["Steal", "Block", "Foul", "Charge"], answer: 1 },
+            { q: "Berapa poin maksimal yang bisa didapat dalam satu penguasaan bola (tanpa pelanggaran tambahan)?", options: ["2 Poin", "3 Poin", "4 Poin", "5 Poin"], answer: 1 },
+            { q: "Berapa jumlah wasit dalam pertandingan bola basket resmi?", options: ["1 Orang", "2 Orang", "3 Orang", "4 Orang"], answer: 2 },
+            { q: "Apa nama piala yang diperebutkan di liga NBA?", options: ["Larry O'Brien Trophy", "Jules Rimet", "Vince Lombardi", "Stanley Cup"], answer: 0 },
+            { q: "Negara mana yang memenangkan medali emas basket putra di Olimpiade Paris 2024?", options: ["Prancis", "Serbia", "Amerika Serikat", "Jerman"], answer: 2 },
+            { q: "Apa istilah memulai pertandingan basket dengan melempar bola ke atas di tengah lapangan?", options: ["Kick-off", "Jump Ball", "Tip-off", "Face-off"], answer: 1 },
+            { q: "Personal foul yang dilakukan saat lawan sedang melakukan shooting menghasilkan?", options: ["Free Throw", "Technical Foul", "Side Out", "Jump Ball"], answer: 0 },
+            { q: "Berapa jumlah tim NBA saat ini?", options: ["20 Tim", "24 Tim", "30 Tim", "32 Tim"], answer: 2 },
+            { q: "Tembakan yang masuk dan menyentuh jaring saja tanpa mengenai ring disebut?", options: ["Airball", "Swish", "Bank Shot", "Lay-up"], answer: 1 },
+            { q: "Siapa pelatih legendaris yang membawa Chicago Bulls dan LA Lakers juara berkali-kali?", options: ["Phil Jackson", "Gregg Popovich", "Steve Kerr", "Doc Rivers"], answer: 0 },
+            { q: "Apa nama liga bola basket profesional pria di Indonesia?", options: ["IBL", "NBL", "Kobatama", "ABL"], answer: 0 }
+        ];
+
+        let ruleMode = 'score';
+        let audioOn = false;
+        let gameActive = false;
+        let players = [];
+        const MAX_Q = 10;
+
+        const sfx = (freq, duration) => {
+            if(!audioOn) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        };
+
+        document.getElementById('audio-toggle').onclick = (e) => {
+            audioOn = !audioOn;
+            e.target.textContent = audioOn ? '🔊' : '🔈';
+        };
+
+        function setRules(mode) {
+            ruleMode = mode;
+            document.getElementById('m-score').classList.toggle('active', mode === 'score');
+            document.getElementById('m-elim').classList.toggle('active', mode === 'elim');
+        }
+
+        class Player {
+            constructor(id, container) {
+                this.id = id;
+                this.score = 0;
+                this.lives = 3;
+                this.count = 0;
+                this.active = true;
+                this.timer = null;
+                this.usedQuestions = [];
+                
+                this.el = document.createElement('div');
+                this.el.className = 'player-area';
+                container.appendChild(this.el);
+                this.render();
+                this.ask();
+            }
+
+            render() {
+                const info = ruleMode === 'score' ? `SOAL: ${this.count}/${MAX_Q}` : `❤️ ${this.lives}`;
+                this.el.innerHTML = `
+                    <div class="hud" style="border-bottom-color: var(--p${this.id}); color: #fff">
+                        <span>P${this.id}</span>
+                        <span style="color: var(--accent)">${info}</span>
+                    </div>
+                    <div class="timer-track"><div class="timer-fill" style="background: var(--p${this.id})"></div></div>
+                    <div class="game-content">
+                        <div class="ball-area">🏀</div>
+                        <div class="question-card">
+                            <div class="q-text">Mempersiapkan...</div>
+                            <div class="options-grid"></div>
+                        </div>
+                        <div style="text-align:center; font-weight:900; color:#fff; padding-top:10px; background: rgba(0,0,0,0.5); border-radius: 10px;">SKOR: ${this.score}</div>
+                    </div>
+                `;
+            }
+
+            ask() {
+                if(!this.active || !gameActive) return;
+                if(ruleMode === 'score' && this.count >= MAX_Q) { this.finish(); return; }
+
+                let qIndex;
+                do {
+                    qIndex = Math.floor(Math.random() * questionBank.length);
+                } while (this.usedQuestions.includes(qIndex) && this.usedQuestions.length < questionBank.length);
+
+                if(this.usedQuestions.length >= questionBank.length) this.usedQuestions = [];
+                this.usedQuestions.push(qIndex);
+
+                const q = questionBank[qIndex];
+                this.currentQ = q;
+                this.el.querySelector('.q-text').textContent = q.q;
+                
+                const grid = this.el.querySelector('.options-grid');
+                grid.innerHTML = '';
+                q.options.forEach((opt, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => this.answer(i);
+                    grid.appendChild(btn);
+                });
+
+                this.startTimer();
+            }
+
+            startTimer() {
+                let time = 100;
+                const fill = this.el.querySelector('.timer-fill');
+                if(this.timer) clearInterval(this.timer);
+                this.timer = setInterval(() => {
+                    time -= 1.25; 
+                    fill.style.width = Math.max(0, time) + '%';
+                    if(time <= 0) {
+                        clearInterval(this.timer);
+                        this.answer(-1);
+                    }
+                }, 100);
+            }
+
+            answer(idx) {
+                clearInterval(this.timer);
+                const correct = idx === this.currentQ.answer;
+                const btns = this.el.querySelectorAll('.option-btn');
+                
+                btns.forEach(b => b.disabled = true);
+
+                if(correct) {
+                    this.score += 100;
+                    sfx(800, 0.1);
+                    if(idx !== -1) btns[idx].classList.add('correct');
+                    this.el.querySelector('.ball-area').style.transform = 'translateY(-20px) scale(1.1)';
+                } else {
+                    sfx(150, 0.3);
+                    if(idx !== -1) btns[idx].classList.add('wrong');
+                    btns[this.currentQ.answer].classList.add('correct');
+                    if(ruleMode === 'elim') this.lives--;
+                    this.el.querySelector('.ball-area').style.filter = 'grayscale(1)';
+                }
+
+                this.count++;
+                this.render();
+
+                if(ruleMode === 'elim' && this.lives <= 0) {
+                    this.active = false;
+                    this.el.classList.add('eliminated');
+                }
+
+                setTimeout(() => {
+                    if(this.active) {
+                        this.el.querySelector('.ball-area').style.transform = 'none';
+                        this.el.querySelector('.ball-area').style.filter = 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))';
+                        this.ask();
+                    }
+                    checkEnd();
+                }, 1200);
+            }
+
+            finish() {
+                this.active = false;
+                this.el.classList.add('eliminated');
+                this.el.querySelector('.q-text').textContent = "FINAL BUZZER!";
+                checkEnd();
+            }
+        }
+
+        function initGame(num) {
+            gameActive = true;
+            document.getElementById('main-menu').style.display = 'none';
+            const gc = document.getElementById('game-container');
+            gc.style.display = 'grid';
+            gc.className = num === 1 ? 'mode-solo' : 'mode-duel';
+            gc.innerHTML = '';
+            
+            players = [];
+            for(let i=1; i<=num; i++) players.push(new Player(i, gc));
+        }
+
+        function checkEnd() {
+            if(players.every(p => !p.active)) {
+                gameActive = false;
+                showVictory();
+            }
+        }
+
+        function showVictory() {
+            const screen = document.getElementById('victory-screen');
+            const list = document.getElementById('results-list');
+            screen.style.display = 'flex';
+            list.innerHTML = '';
+
+            const sorted = [...players].sort((a,b) => b.score - a.score);
+            sorted.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.style.cssText = `background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid var(--p${p.id})`;
+                div.innerHTML = `<span style="font-weight:800">#${i+1} PEMAIN ${p.id}</span> <strong style="font-size:1.2rem">${p.score} PT</strong>`;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
